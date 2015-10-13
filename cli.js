@@ -55,7 +55,6 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
 
     if (line.length === 0) {
       isOnChar = false;
-      return;
     }
 
     let characterMatches = line.match(startsWithCharRegex);
