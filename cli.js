@@ -13,22 +13,19 @@ const
 fs = require('./lib/fs-promise'),
 path = require('path'),
 
-startsWithCharRegex = /^([A-Z\s1-9]+):\s*/,
 throwFromPromise = (err) => {
   process.nextTick(() => {
     throw err;
   });
 };
 
-// output variables
-let dialogs = {},
-lines = {},
-characters = new Set(),
-
-file = cli.args[0],
+let file = cli.args[0],
 
 // create output directory
-dir = path.basename(file, path.extname(file));
+extension = path.extname(file),
+Parser = require('./lib/parser-' + extension.substr(1)),
+parser = new Parser(),
+dir = path.basename(file, extension);
 dir = cli.output || path.join(path.dirname(file), dir);
 
 let mkOutputDir = fs.stat(dir);
@@ -41,50 +38,21 @@ if (!cli.dryRun) {
       }
     }, (err) => {
       if (err.code === 'ENOENT') { // no such file or directory
-        return fs.mkdir(dir);
+        mkOutputDir = fs.mkdir(dir); // promises work weird
+        return mkOutputDir;
       }
       throwFromPromise(err);
     });
 }
 
 fs.readFile(file, { encoding: 'utf8' }).then((data) => {
-  let
-  character = null,
-  isOnChar = false;
-  data.split(/\r?\n/).forEach((line) => {
-    line = line.replace(/^\s+|\s+$/, '');
+  parser.process(data);
 
-    if (line.length === 0) {
-      isOnChar = false;
-    }
-
-    let characterMatches = line.match(startsWithCharRegex);
-    if (characterMatches) {
-      isOnChar = true;
-      let toStrip = characterMatches[0];
-      character = characterMatches[1];
-      line = line.substr(toStrip.length);
-    }
-
-    if (isOnChar) {
-      characters.add(character);
-      lines[character] = (lines[character] || 0) + 1;
-      dialogs[character] = (dialogs[character] || '') + ' ' + line;
-    }
-  });
-
-  // remove comments and write files
-  for (let character of characters) {
-    let text = dialogs[character],
-    commentStarts = -1,
-    commentEnds = -1;
-    while (~(commentStarts = text.lastIndexOf('(')) &&
-           ~(commentEnds = text.indexOf(')', commentStarts))) {
-      text = text.substr(0, commentStarts) + text.substr(commentEnds + 1);
-    }
-
-    if (!cli.dryRun) {
+  // write files
+  if (!cli.dryRun) {
+    for (let character of parser.characters) {
       mkOutputDir.then(() => {
+        let text = parser.dialogs[character];
         fs.writeFile(path.join(dir, character + '.txt'), text);
       });
     }
@@ -92,8 +60,8 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
 
   // print character lines in order
   let arrLines = [];
-  for (let character of characters) {
-    arrLines.push([lines[character], character]);
+  for (let character of parser.characters) {
+    arrLines.push([parser.lines[character], character]);
   }
   arrLines.
     sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).
