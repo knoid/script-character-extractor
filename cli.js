@@ -4,6 +4,9 @@ const
 cli = require('commander');
 
 cli.
+  usage('[options] <file>').
+  description('Split a movie script into files for each character removing ' +
+      'comments.').
   option('-n, --dry-run', 'don\'t write output files').
   option('-o, --output <path>',
       'specify output directory, default is input file without extension').
