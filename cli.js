@@ -23,6 +23,7 @@ throwFromPromise = (err) => {
 // output variables
 let dialogs = {},
 lines = {},
+characters = new Set(),
 
 file = cli.args[0],
 
@@ -66,13 +67,14 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
     }
 
     if (isOnChar) {
+      characters.add(character);
       lines[character] = (lines[character] || 0) + 1;
       dialogs[character] = (dialogs[character] || '') + ' ' + line;
     }
   });
 
   // remove comments and write files
-  for (let character of Object.keys(dialogs)) {
+  for (let character of characters) {
     let text = dialogs[character],
     commentStarts = -1,
     commentEnds = -1;
@@ -90,7 +92,7 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
 
   // print character lines in order
   let arrLines = [];
-  for (let character of Object.keys(lines)) {
+  for (let character of characters) {
     arrLines.push([lines[character], character]);
   }
   arrLines.
