@@ -1,0 +1,6 @@
+{
+  "esnext": true,
+  "globalstrict": true,
+  "predef": ["console", "module", "process", "require"],
+  "unused": true
+}
