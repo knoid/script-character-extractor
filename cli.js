@@ -10,7 +10,7 @@ cli.
   parse(process.argv);
 
 const
-fs = require('./lib/fsPromise'),
+fs = require('./lib/fs-promise'),
 path = require('path'),
 
 startsWithCharRegex = /^([A-Z\s1-9]+):\s*/,
