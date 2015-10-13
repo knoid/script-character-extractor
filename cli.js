@@ -71,7 +71,8 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
     }
   });
 
-  for (let character in dialogs) {
+  // remove comments and write files
+  for (let character of Object.keys(dialogs)) {
     let text = dialogs[character],
     commentStarts = -1,
     commentEnds = -1;
@@ -85,6 +86,16 @@ fs.readFile(file, { encoding: 'utf8' }).then((data) => {
         fs.writeFile(path.join(dir, character + '.txt'), text);
       });
     }
-    console.log(character + ' has ' + lines[character] + ' lines.');
   }
+
+  // print character lines in order
+  let arrLines = [];
+  for (let character of Object.keys(lines)) {
+    arrLines.push([lines[character], character]);
+  }
+  arrLines.
+    sort((a, b) => a[0] - b[0] || a[1].localeCompare(b[1])).
+    forEach((lines) => {
+      console.log(lines[1] + ' has ' + lines[0] + ' lines.');
+    });
 });
